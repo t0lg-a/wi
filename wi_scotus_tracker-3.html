@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WI Supreme Court — Live Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --border: rgba(15,23,42,0.08);
+    --shadow: 0 1px 2px rgba(15,23,42,0.04), 0 4px 16px rgba(15,23,42,0.05);
+    --text: #0f172a;
+    --muted: #64748b;
+    --dem: #3b7dd8;
+    --dem-soft: #d9e6f7;
+    --gop: #d64545;
+    --gop-soft: #f5d9d9;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    font-feature-settings: 'tnum' 1, 'cv11' 1;
+    -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 28px 24px 80px; }
+  header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+  h1 { font-size: 24px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); font-size: 13px; }
+  .live-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px;
+    background: #d6f0db; color: #1f8438; font-size: 11px; font-weight: 600;
+    border-radius: 99px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .live-pill::before { content: ''; width: 6px; height: 6px; background: #1f8438; border-radius: 50%;
+    animation: pulse 1.6s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .grid { display: grid; gap: 16px; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .grid-4 { grid-template-columns: 1.4fr 1fr 1fr 1fr; }
+  @media (max-width: 880px) { .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; } }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    box-shadow: var(--shadow); padding: 20px; }
+  .card h2 { font-size: 12px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--muted); margin: 0 0 14px; }
+  .bigrow { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+  .name { font-weight: 600; font-size: 15px; }
+  .name .party { font-size: 11px; color: var(--muted); font-weight: 500; margin-left: 6px; }
+  .pct { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .pct.huge { font-size: 36px; }
+  .votes { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+  .bar { height: 10px; background: #eef0f4; border-radius: 99px; overflow: hidden; display: flex; }
+  .bar.thick { height: 14px; }
+  .bar > div { height: 100%; transition: width 0.6s ease; }
+  .bar .d { background: var(--dem); }
+  .bar .r { background: var(--gop); }
+  .meta { display: flex; gap: 18px; font-size: 12px; color: var(--muted); margin-top: 14px; flex-wrap: wrap; }
+  .meta b { color: var(--text); font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 8px 6px; text-align: right; font-variant-numeric: tabular-nums; }
+  th:first-child, td:first-child { text-align: left; }
+  th { font-weight: 600; color: var(--muted); border-bottom: 1px solid var(--border);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+  tbody tr { border-bottom: 1px solid rgba(15,23,42,0.04); transition: background 0.4s; }
+  tbody tr.flash { background: #fffbe8; }
+  tfoot td { border-top: 2px solid var(--border); font-weight: 700; padding-top: 10px; }
+  .pill { display: inline-block; padding: 2px 7px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+  .pill.d { background: var(--dem-soft); color: var(--dem); }
+  .pill.r { background: var(--gop-soft); color: var(--gop); }
+  .pill.gray { background: #eef0f4; color: var(--muted); }
+  .pill.green { background: #d6f0db; color: #1f8438; }
+  .pill.amber { background: #fdebcc; color: #b06f00; }
+  input[type="text"] { padding: 6px 9px; border: 1px solid var(--border); border-radius: 6px;
+    background: white; flex: 1; font-family: ui-monospace, monospace; font-size: 11px; }
+  button { padding: 7px 14px; font-family: inherit; font-size: 12px; font-weight: 500;
+    background: var(--text); color: white; border: none; border-radius: 6px; cursor: pointer; }
+  button.secondary { background: white; color: var(--text); border: 1px solid var(--border); }
+  button:hover { opacity: 0.92; }
+  details { margin-top: 14px; }
+  summary { font-size: 12px; color: var(--muted); cursor: pointer; }
+  textarea { width: 100%; min-height: 130px; font-family: ui-monospace, monospace; font-size: 11px;
+    border: 1px solid var(--border); border-radius: 6px; padding: 8px; margin-top: 6px; }
+  .row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .row label { font-size: 11px; color: var(--muted); width: 80px; flex-shrink: 0; font-weight: 600; }
+  .status { font-size: 11px; padding: 4px 9px; border-radius: 6px; font-weight: 500; }
+  .status.ok { background: #d6f0db; color: #1f8438; }
+  .status.err { background: #fde0e0; color: #c41e1e; }
+  .status.loading { background: #fdebcc; color: #b06f00; }
+  .status.idle { background: #eef0f4; color: var(--muted); }
+  .footer-note { font-size: 11px; color: var(--muted); margin-top: 18px; line-height: 1.5; }
+  .empty { color: var(--muted); text-align: center; padding: 36px 0; font-size: 13px; }
+  .mode-card { padding: 16px; }
+  .mode-card h3 { font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--muted); margin: 0 0 10px; }
+  .mode-swing { display: flex; align-items: baseline; gap: 8px; margin: 6px 0; }
+  .mode-swing .label { font-size: 11px; color: var(--muted); width: 50px; }
+  .mode-swing .val { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .swing-big { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+  .countdown { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  td.dual { line-height: 1.3; }
+  td.dual .nums { font-size: 12px; font-weight: 500; }
+  td.dual .nums .d { color: var(--dem); }
+  td.dual .nums .r { color: var(--gop); }
+  td.dual .pp { font-size: 10px; color: var(--muted); margin-top: 2px; font-weight: 500; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Wisconsin Supreme Court — Live Tracker</h1>
+      <div class="sub">Taylor (lib) vs Lazar (con) · April 7, 2026 · vs 2025 Crawford-Schimel baseline · Source: NYT</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="live-pill">Live</div>
+      <div class="countdown" style="margin-top: 6px;">
+        Updated <span id="last-fetch">never</span> · next in <span id="countdown">—</span>s
+      </div>
+    </div>
+  </header>
+
+  <div class="card" style="margin-bottom: 16px;">
+    <h2>NYT JSON Endpoints</h2>
+    <div class="row">
+      <label>2025 race</label>
+      <input type="text" id="r1-url" value="https://static01.nyt.com/elections-assets/pages/data/2025-04-01/results-wisconsin-supreme-court.json">
+      <span class="status idle" id="r1-status">idle</span>
+    </div>
+    <div class="row">
+      <label>2026 race</label>
+      <input type="text" id="r2-url" value="https://static01.nyt.com/elections-assets/pages/data/2026-04-07/results-wisconsin-supreme-court.json">
+      <span class="status idle" id="r2-status">idle</span>
+    </div>
+    <div style="display:flex; gap:8px; margin-top: 10px; flex-wrap: wrap; align-items: center;">
+      <button onclick="fetchAll()">Refresh now</button>
+      <span style="font-size:11px; color:var(--muted);">Auto-refreshing 2026 race every 60 seconds</span>
+    </div>
+    <details>
+      <summary style="margin-top: 14px;">Paste JSON manually (if CORS blocks the fetch)</summary>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px;">
+        <div>
+          <div style="font-size:11px; font-weight:600; color:var(--muted);">2025 race JSON</div>
+          <textarea id="r1-paste" placeholder="Paste 2025 JSON..."></textarea>
+          <button class="secondary" onclick="loadPasted('r1')">Load 2025</button>
+        </div>
+        <div>
+          <div style="font-size:11px; font-weight:600; color:var(--muted);">2026 race JSON</div>
+          <textarea id="r2-paste" placeholder="Paste 2026 JSON..."></textarea>
+          <button class="secondary" onclick="loadPasted('r2')">Load 2026</button>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- Debug strip: shows parsed candidate parties -->
+  <div class="card" style="margin-bottom: 16px; padding: 12px 20px;">
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+      <span style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--muted);">Parsed candidates:</span>
+      <span id="cand-debug" style="font-size:12px; color:var(--muted);">—</span>
+    </div>
+  </div>
+
+  <!-- Live projection: prominent -->
+  <div class="card" style="margin-bottom: 16px;">
+    <h2>Live Projection — County-Level Early Swing Applied to Election Day</h2>
+    <div class="grid grid-4">
+      <div>
+        <div class="bigrow" style="margin-bottom:10px;">
+          <div class="name">Lazar <span class="party">Con</span></div>
+          <div><div class="pct huge" style="color:var(--gop)" id="proj-r-pct">—</div></div>
+        </div>
+        <div class="bigrow" style="margin-bottom:10px;">
+          <div class="name">Taylor <span class="party">Lib</span></div>
+          <div><div class="pct huge" style="color:var(--dem)" id="proj-d-pct">—</div></div>
+        </div>
+        <div class="bar thick"><div class="d" id="proj-d-bar" style="width:0%"></div><div class="r" id="proj-r-bar" style="width:0%"></div></div>
+        <div class="meta">
+          <span><b id="proj-d-votes">—</b> Lib</span>
+          <span><b id="proj-r-votes">—</b> Con</span>
+          <span>Margin: <b id="proj-margin">—</b></span>
+          <span>vs 2025: <b id="proj-swing">—</b></span>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:8px;">Reporting</div>
+        <div class="pct" id="reporting-pct">—</div>
+        <div class="votes"><span id="reporting-counted">—</span> of <span id="reporting-expected">—</span></div>
+      </div>
+      <div>
+        <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:8px;">Counties in</div>
+        <div class="pct" id="counties-in">—</div>
+        <div class="votes">of 72 reporting</div>
+      </div>
+      <div>
+        <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:8px;">Implied turnout</div>
+        <div class="pct" id="proj-turnout">—</div>
+        <div class="votes" id="proj-turnout-note">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Projection history chart -->
+  <div class="card" style="margin-bottom: 16px;">
+    <h2>Projection History — Every Minute Through the Night</h2>
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+      <div style="font-size:11px; color:var(--muted);"><span id="hist-count">0</span> snapshots saved locally</div>
+      <button class="secondary" onclick="clearHistory()" style="margin-left:auto;">Reset history</button>
+    </div>
+    <svg id="history-chart" viewBox="0 0 900 240" style="width:100%; height:auto;" preserveAspectRatio="none"></svg>
+    <div style="display:flex; gap:18px; font-size:11px; color:var(--muted); margin-top:8px; flex-wrap:wrap;">
+      <span><span style="display:inline-block;width:14px;height:2px;background:var(--dem);vertical-align:middle;margin-right:4px;"></span>Taylor (Lib) projected %</span>
+      <span><span style="display:inline-block;width:14px;height:2px;background:var(--gop);vertical-align:middle;margin-right:4px;"></span>Lazar (Con) projected %</span>
+      <span style="margin-left:auto;">Snapshots persist in browser localStorage</span>
+    </div>
+  </div>
+
+  <!-- Mode-specific swings: the heart of the methodology -->
+  <div class="card" style="margin-bottom: 16px;">
+    <h2>Mode-Specific Swings (2025 → 2026, Liberal % Change)</h2>
+    <div class="grid grid-3" id="mode-swings">
+      <div class="empty">Waiting for data…</div>
+    </div>
+  </div>
+
+  <div class="grid grid-2" style="margin-bottom: 16px;">
+    <div class="card">
+      <h2>2025 Race (Apr 1) — Crawford vs Schimel</h2>
+      <div id="r1-summary"><div class="empty">Waiting for fetch…</div></div>
+    </div>
+    <div class="card">
+      <h2>2026 Race — Counted So Far</h2>
+      <div id="r2-summary"><div class="empty">Waiting for fetch…</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>By County — Early Vote Swing → Election Day Projection (72 counties)</h2>
+    <div id="method-banner" style="display:none; padding: 10px 14px; background: #fdebcc; color: #8a5a00; border-radius: 8px; font-size: 12px; margin-bottom: 12px; line-height: 1.5;">
+      <b>Heads up:</b> NYT's 2025 Wisconsin Supreme Court data does not include vote-mode breakdowns (mail / early in-person / election day). Falling back to <b>whole-county uniform swing</b>: each county's projected D% = its 2025 D% + observed swing (or statewide swing if the county hasn't started reporting). The "Early" columns below show whole-county totals; the "EDay" columns are unused.
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>County</th>
+          <th>2025 Early (Lib / Con)</th>
+          <th>2026 Early (Lib / Con)</th>
+          <th>Swing</th>
+          <th>2025 EDay (Lib / Con)</th>
+          <th>Proj EDay (Lib / Con)</th>
+          <th>EEVP</th>
+          <th>Final Lib</th>
+          <th>Final Con</th>
+          <th>Margin</th>
+        </tr>
+      </thead>
+      <tbody id="county-tbody">
+        <tr><td colspan="10" class="empty">No data yet</td></tr>
+      </tbody>
+      <tfoot id="county-tfoot"></tfoot>
+    </table>
+  </div>
+
+  <div class="footer-note">
+    Methodology: For each county, compute early-vote liberal % in the 2025 race (Crawford-Schimel, mail + in-person absentee combined)
+    and early-vote liberal % in the 2026 race (Taylor-Lazar). The difference is that county's early swing. Apply that swing to the
+    same county's 2025 election day liberal % to get a projected election day liberal %. Estimate remaining election day vote per
+    county by multiplying NYT's <code>total_expected_vote</code> by the county's 2025 election day share. Final Lib and Con per
+    county = currently counted 2026 vote (early modes, fully in) + projected election day. Counties with no 2026 early data yet
+    fall back to the statewide early swing. Wisconsin Supreme Court is officially nonpartisan; "Lib" and "Con" map to the
+    Democratic-aligned and Republican-aligned candidates respectively, using nyt_id-based candidate identification (Crawford,
+    Taylor → Lib; Schimel, Lazar → Con).
+  </div>
+</div>
+
+<script>
+let RAW = { r1: null, r2: null };
+let PARSED = { r1: null, r2: null };
+let prevCountyTotals = {};
+let countdownInterval = null;
+let nextRefreshAt = null;
+const REFRESH_SECS = 60;
+
+const fmt = n => Math.round(n).toLocaleString();
+const pct = (v, p=1) => v.toFixed(p) + "%";
+const dPctOf = (d, r) => (d + r) === 0 ? 0 : 100 * d / (d + r);
+
+const MODE_KEYS = ['absentee_mail', 'absentee_in_person', 'election_day_in_person'];
+const MODE_LABELS = {
+  absentee_mail: 'Mail',
+  absentee_in_person: 'Early In-Person',
+  election_day_in_person: 'Election Day'
+};
+
+// ============================================================
+// Projection history — persisted to localStorage so the chart
+// survives page reloads through the night.
+// ============================================================
+const HIST_KEY = 'wi_scotus_2026_projection_history_v2';
+
+function saveSnapshot(libPct, conPct, eevp, projD, projR, projVotes) {
+  if (!isFinite(libPct) || !isFinite(conPct)) return;
+  if ((projD + projR) <= 0) return;
+  try {
+    const hist = loadHistory();
+    const now = Date.now();
+    const last = hist[hist.length - 1];
+    // Don't save if last snapshot was less than 5 seconds ago (manual refresh dedup)
+    if (last && now - last.t < 5000) return;
+    hist.push({ t: now, libPct, conPct, eevp, dCnt: projD, rCnt: projR, votes: projVotes });
+    // Keep last 1000 points (overflow protection)
+    if (hist.length > 1000) hist.shift();
+    localStorage.setItem(HIST_KEY, JSON.stringify(hist));
+  } catch (e) { console.warn('Snapshot save failed:', e); }
+}
+
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); }
+  catch { return []; }
+}
+
+function clearHistory() {
+  if (!confirm('Reset projection history? This will erase all saved snapshots.')) return;
+  localStorage.removeItem(HIST_KEY);
+  renderHistoryChart();
+}
+
+function renderHistoryChart() {
+  const hist = loadHistory();
+  const svg = document.getElementById('history-chart');
+  const countEl = document.getElementById('hist-count');
+  if (!svg) return;
+  if (countEl) countEl.textContent = hist.length;
+
+  const W = 900, H = 240;
+  const ML = 48, MR = 18, MT = 18, MB = 32;
+  const PW = W - ML - MR;
+  const PH = H - MT - MB;
+
+  if (hist.length < 1) {
+    svg.innerHTML = `<text x="${W/2}" y="${H/2}" text-anchor="middle" fill="#94a3b8" font-size="13" font-family="Inter, sans-serif">Waiting for data points… (a snapshot is saved every refresh)</text>`;
+    return;
+  }
+
+  // X axis: time. If only one point, span to "now + 1 min" so we have something to draw.
+  const tMin = hist[0].t;
+  const tMax = Math.max(hist[hist.length - 1].t, tMin + 60000);
+  const dt = tMax - tMin || 1;
+
+  // Y axis: auto-scale around the data with padding
+  const allPcts = hist.flatMap(s => [s.libPct, s.conPct]);
+  let yMin = Math.floor(Math.min(...allPcts) / 5) * 5 - 2;
+  let yMax = Math.ceil(Math.max(...allPcts) / 5) * 5 + 2;
+  yMin = Math.max(0, yMin);
+  yMax = Math.min(100, yMax);
+  if (yMax - yMin < 10) { yMax = Math.min(100, yMin + 10); }
+
+  const xOf = t => ML + ((t - tMin) / dt) * PW;
+  const yOf = p => MT + (1 - (p - yMin) / (yMax - yMin)) * PH;
+
+  // Build line paths
+  const libPath = hist.map((s, i) =>
+    `${i === 0 ? 'M' : 'L'} ${xOf(s.t).toFixed(1)} ${yOf(s.libPct).toFixed(1)}`
+  ).join(' ');
+  const conPath = hist.map((s, i) =>
+    `${i === 0 ? 'M' : 'L'} ${xOf(s.t).toFixed(1)} ${yOf(s.conPct).toFixed(1)}`
+  ).join(' ');
+
+  // Y-axis gridlines and labels (every 5%)
+  let gridLines = '';
+  let yLabels = '';
+  for (let p = Math.ceil(yMin); p <= yMax; p++) {
+    if (p % 5 !== 0) continue;
+    const y = yOf(p);
+    gridLines += `<line x1="${ML}" y1="${y}" x2="${W - MR}" y2="${y}" stroke="#eef0f4" stroke-width="1" />`;
+    yLabels += `<text x="${ML - 6}" y="${y + 3}" text-anchor="end" fill="#94a3b8" font-size="10" font-family="Inter, sans-serif">${p}%</text>`;
+  }
+
+  // 50% reference line
+  if (yMin <= 50 && yMax >= 50) {
+    const y50 = yOf(50);
+    gridLines += `<line x1="${ML}" y1="${y50}" x2="${W - MR}" y2="${y50}" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3" />`;
+  }
+
+  // X-axis labels — 6 evenly spaced timestamps
+  let xLabels = '';
+  const numXLabels = 6;
+  for (let i = 0; i <= numXLabels; i++) {
+    const t = tMin + (dt * i / numXLabels);
+    const d = new Date(t);
+    const lbl = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+    xLabels += `<text x="${xOf(t).toFixed(1)}" y="${H - 12}" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter, sans-serif">${lbl}</text>`;
+  }
+
+  // Latest point markers
+  const last = hist[hist.length - 1];
+  const lx = xOf(last.t);
+  const lyL = yOf(last.libPct);
+  const lyC = yOf(last.conPct);
+
+  // Latest value badges (right-aligned to the latest point)
+  const badgeX = Math.min(W - MR - 4, lx + 8);
+  const badges = `
+    <text x="${badgeX}" y="${lyL + 3}" fill="var(--dem)" font-size="11" font-weight="600" font-family="Inter, sans-serif">${last.libPct.toFixed(1)}%</text>
+    <text x="${badgeX}" y="${lyC + 3}" fill="var(--gop)" font-size="11" font-weight="600" font-family="Inter, sans-serif">${last.conPct.toFixed(1)}%</text>
+  `;
+
+  svg.innerHTML = `
+    ${gridLines}
+    <path d="${libPath}" fill="none" stroke="var(--dem)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+    <path d="${conPath}" fill="none" stroke="var(--gop)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+    <circle cx="${lx}" cy="${lyL}" r="4" fill="var(--dem)" stroke="white" stroke-width="1.5" />
+    <circle cx="${lx}" cy="${lyC}" r="4" fill="var(--gop)" stroke="white" stroke-width="1.5" />
+    ${yLabels}
+    ${xLabels}
+    ${badges}
+  `;
+}
+
+// ============================================================
+// NYT schema parser
+// ============================================================
+// Hardcoded fallback for known WI Supreme Court candidates.
+// These races are officially nonpartisan, so NYT typically returns null
+// for party_id and we MUST use nyt_id matching.
+// "D" = liberal (Democratic-aligned), "R" = conservative (Republican-aligned)
+const KNOWN_PARTIES = {
+  // 2025 race
+  'crawford-s': 'D',  // Susan Crawford — liberal
+  'schimel-b': 'R',   // Brad Schimel — conservative
+  // 2026 race
+  'taylor-c': 'D',    // Chris Taylor — liberal
+  'lazar-m': 'R'      // Maria Lazar — conservative
+};
+
+function detectParty(candObj) {
+  // For known candidates, the nyt_id mapping is the source of truth.
+  // This matters for nonpartisan races (WI Supreme Court) where NYT
+  // may emit no party field at all, or where it might emit "liberal"/
+  // "conservative" which we want to map to D/R buckets.
+  if (candObj?.nyt_id && KNOWN_PARTIES[candObj.nyt_id]) {
+    return KNOWN_PARTIES[candObj.nyt_id];
+  }
+  // Try every plausible field & nesting
+  const candidates = [
+    candObj?.party_id, candObj?.party,
+    candObj?.party?.id, candObj?.party?.name,
+    candObj?.party_name, candObj?.partyId
+  ];
+  for (const v of candidates) {
+    if (!v || typeof v !== 'string') continue;
+    const p = v.toLowerCase();
+    if (p.includes('liberal')) return 'D';      // for nonpartisan judicial races
+    if (p.includes('conservative')) return 'R';
+    if (p.includes('dem') || p === 'd') return 'D';
+    if (p.includes('rep') || p.includes('gop') || p === 'r') return 'R';
+  }
+  return 'O';
+}
+
+function parseNYT(data) {
+  if (!data || !data.races || !data.races[0]) throw new Error("No races[0]");
+  const race = data.races[0];
+
+  // Build candidate metadata. NYT may put party on the race-level candidates list,
+  // on per-unit candidates, or both.
+  const cmeta = {};
+  (race.candidates || []).forEach(c => {
+    cmeta[c.nyt_id] = {
+      name: ((c.first_name || '') + ' ' + (c.last_name || '')).trim() || c.nyt_id,
+      lastName: c.last_name || c.nyt_id,
+      party: detectParty(c),
+      raw: c
+    };
+  });
+
+  // Also harvest party from per-unit candidates if race-level didn't have it
+  (race.reporting_units || []).forEach(u => {
+    (u.candidates || []).forEach(c => {
+      if (!cmeta[c.nyt_id]) {
+        cmeta[c.nyt_id] = {
+          name: c.nyt_id, lastName: c.nyt_id,
+          party: detectParty(c), raw: c
+        };
+      } else if (cmeta[c.nyt_id].party === 'O') {
+        const p = detectParty(c);
+        if (p !== 'O') cmeta[c.nyt_id].party = p;
+      }
+    });
+  });
+
+  // Debug: log once per race so we can see what NYT actually returns
+  if (!window.__nyt_debug_logged) {
+    console.log('[NYT debug] race-level candidates[0]:', race.candidates?.[0]);
+    console.log('[NYT debug] reporting_units[0].candidates[0]:', race.reporting_units?.[0]?.candidates?.[0]);
+    console.log('[NYT debug] parsed cmeta:', cmeta);
+    window.__nyt_debug_logged = true;
+  }
+
+  const partyOf = nyt_id => cmeta[nyt_id]?.party || 'O';
+
+  let stateUnit = (race.reporting_units || []).find(u => u.level === 'state');
+  if (!stateUnit) stateUnit = race.reporting_units?.[0];
+
+  const counties = (race.reporting_units || [])
+    .filter(u => u.level === 'county')
+    .map(u => ({
+      name: u.name,
+      eevp: u.eevp ?? 0,
+      expected: u.total_expected_vote ?? 0,
+      total: u.total_votes ?? 0,
+      ...aggregateUnit(u, partyOf, cmeta)
+    }));
+
+  return {
+    eevp: stateUnit?.eevp ?? 0,
+    expected: stateUnit?.total_expected_vote ?? 0,
+    totalVotes: stateUnit?.total_votes ?? 0,
+    summary: aggregateUnit(stateUnit, partyOf, cmeta),
+    counties,
+    candidates: cmeta,
+    updatedAt: race.updated_at || null,
+  };
+}
+
+function aggregateUnit(unit, partyOf, cmeta) {
+  const out = {
+    d: 0, r: 0, o: 0,
+    modes: {
+      absentee_mail: {d:0,r:0},
+      absentee_in_person: {d:0,r:0},
+      election_day_in_person: {d:0,r:0}
+    },
+    candidates: []
+  };
+  if (!unit || !unit.candidates) return out;
+  unit.candidates.forEach(c => {
+    const p = partyOf(c.nyt_id);
+    const v = c.votes || {};
+    const total = v.total ?? 0;
+    if (p === 'D') out.d += total;
+    else if (p === 'R') out.r += total;
+    else out.o += total;
+    out.candidates.push({
+      nyt_id: c.nyt_id,
+      name: cmeta[c.nyt_id]?.name || c.nyt_id,
+      lastName: cmeta[c.nyt_id]?.lastName || c.nyt_id,
+      party: p,
+      votes: total
+    });
+    if (p === 'D' || p === 'R') {
+      const k = p === 'D' ? 'd' : 'r';
+      MODE_KEYS.forEach(m => {
+        if (v[m] != null) out.modes[m][k] += v[m];
+      });
+    }
+  });
+  return out;
+}
+
+// ============================================================
+// Fetch
+// ============================================================
+async function fetchOne(which) {
+  const url = document.getElementById(which + '-url').value.trim();
+  const status = document.getElementById(which + '-status');
+  status.className = 'status loading';
+  status.textContent = 'fetching…';
+  try {
+    const r = await fetch(url, { mode: 'cors', cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    RAW[which] = data;
+    PARSED[which] = parseNYT(data);
+    status.className = 'status ok';
+    status.textContent = 'ok · ' + (PARSED[which].eevp).toFixed(1) + '% in';
+    return true;
+  } catch (e) {
+    status.className = 'status err';
+    status.textContent = 'failed: ' + e.message;
+    console.error(which, e);
+    return false;
+  }
+}
+
+async function fetchAll() {
+  // First round only needs to be fetched once (it's static)
+  const tasks = [fetchOne('r2')];
+  if (!PARSED.r1) tasks.push(fetchOne('r1'));
+  await Promise.all(tasks);
+  document.getElementById('last-fetch').textContent = new Date().toLocaleTimeString();
+  nextRefreshAt = Date.now() + REFRESH_SECS * 1000;
+  render();
+}
+
+function loadPasted(which) {
+  const text = document.getElementById(which + '-paste').value.trim();
+  if (!text) return;
+  try {
+    const data = JSON.parse(text);
+    RAW[which] = data;
+    PARSED[which] = parseNYT(data);
+    const status = document.getElementById(which + '-status');
+    status.className = 'status ok';
+    status.textContent = 'pasted · ' + (PARSED[which].eevp).toFixed(1) + '% in';
+    document.getElementById('last-fetch').textContent = new Date().toLocaleTimeString();
+    render();
+  } catch (e) {
+    alert('Parse error: ' + e.message);
+  }
+}
+
+// ============================================================
+// Render — first round summary
+// ============================================================
+function renderR1Summary() {
+  const el = document.getElementById('r1-summary');
+  if (!PARSED.r1) { el.innerHTML = '<div class="empty">Waiting for fetch…</div>'; return; }
+  const s = PARSED.r1.summary;
+  const dP = dPctOf(s.d, s.r);
+  const rP = 100 - dP;
+  const total = s.d + s.r + s.o;
+
+  let modeRows = '';
+  MODE_KEYS.forEach(k => {
+    const v = s.modes[k];
+    const tot = v.d + v.r;
+    if (tot === 0) return;
+    const dp = dPctOf(v.d, v.r);
+    modeRows += `<tr><td>${MODE_LABELS[k]}</td><td>${fmt(v.d)}</td><td>${fmt(v.r)}</td><td>${dp.toFixed(1)}%</td></tr>`;
+  });
+
+  el.innerHTML = `
+    <div class="bigrow"><div class="name">Schimel <span class="party">Con</span></div>
+      <div><div class="pct" style="color:var(--gop)">${pct(rP)}</div>
+      <div class="votes">${fmt(s.r)}</div></div></div>
+    <div class="bigrow"><div class="name">Crawford <span class="party">Lib</span></div>
+      <div><div class="pct" style="color:var(--dem)">${pct(dP)}</div>
+      <div class="votes">${fmt(s.d)}</div></div></div>
+    <div class="bar"><div class="d" style="width:${dP}%"></div><div class="r" style="width:${rP}%"></div></div>
+    <div class="meta"><span>Total: <b>${fmt(total)}</b></span><span>EEVP: <b>${PARSED.r1.eevp.toFixed(1)}%</b></span></div>
+    ${modeRows ? `<table style="margin-top:14px"><thead><tr><th>Mode</th><th>Lib</th><th>Con</th><th>Lib%</th></tr></thead><tbody>${modeRows}</tbody></table>` : ''}
+  `;
+}
+
+function renderR2Summary() {
+  const el = document.getElementById('r2-summary');
+  if (!PARSED.r2) { el.innerHTML = '<div class="empty">Waiting for fetch…</div>'; return; }
+  const s = PARSED.r2.summary;
+  const dP = dPctOf(s.d, s.r);
+  const rP = 100 - dP;
+  const harris = s.candidates.find(c => c.party === 'D');
+  const fuller = s.candidates.find(c => c.party === 'R');
+  const total = s.d + s.r + s.o;
+
+  let modeRows = '';
+  MODE_KEYS.forEach(k => {
+    const v = s.modes[k];
+    const tot = v.d + v.r;
+    const dp = tot > 0 ? dPctOf(v.d, v.r) : null;
+    modeRows += `<tr><td>${MODE_LABELS[k]}</td><td>${tot > 0 ? fmt(v.d) : '—'}</td><td>${tot > 0 ? fmt(v.r) : '—'}</td><td>${dp != null ? dp.toFixed(1) + '%' : '—'}</td></tr>`;
+  });
+
+  el.innerHTML = `
+    <div class="bigrow"><div class="name">${fuller?.lastName || 'Lazar'} <span class="party">Con</span></div>
+      <div><div class="pct" style="color:var(--gop)">${pct(rP)}</div>
+      <div class="votes">${fmt(s.r)}</div></div></div>
+    <div class="bigrow"><div class="name">${harris?.lastName || 'Taylor'} <span class="party">Lib</span></div>
+      <div><div class="pct" style="color:var(--dem)">${pct(dP)}</div>
+      <div class="votes">${fmt(s.d)}</div></div></div>
+    <div class="bar"><div class="d" style="width:${dP}%"></div><div class="r" style="width:${rP}%"></div></div>
+    <div class="meta">
+      <span><b>${fmt(total)}</b> votes</span>
+      <span>EEVP: <b>${PARSED.r2.eevp.toFixed(1)}%</b></span>
+    </div>
+    <table style="margin-top:14px"><thead><tr><th>Mode</th><th>Lib</th><th>Con</th><th>Lib%</th></tr></thead><tbody>${modeRows}</tbody></table>
+  `;
+}
+
+// ============================================================
+// Mode swings
+// ============================================================
+function renderModeSwings(swings) {
+  const el = document.getElementById('mode-swings');
+  el.innerHTML = '';
+  MODE_KEYS.forEach(k => {
+    const sw = swings[k];
+    const card = document.createElement('div');
+    card.className = 'mode-card';
+    card.style.cssText = 'background:#fafbfc; border:1px solid var(--border); border-radius:10px;';
+
+    if (sw == null) {
+      card.innerHTML = `
+        <h3>${MODE_LABELS[k]}</h3>
+        <div class="swing-big" style="color:var(--muted)">—</div>
+        <div class="votes" style="text-align:left; margin-top:6px;">No R2 data yet</div>
+      `;
+    } else {
+      const color = sw.swing >= 0 ? 'var(--dem)' : 'var(--gop)';
+      const sign = sw.swing >= 0 ? 'L+' : 'C+';
+      card.innerHTML = `
+        <h3>${MODE_LABELS[k]}</h3>
+        <div class="swing-big" style="color:${color}">${sign}${Math.abs(sw.swing).toFixed(1)}</div>
+        <div class="mode-swing"><span class="label">2025</span><span class="val">${sw.r1Dp.toFixed(1)}%</span> Lib</div>
+        <div class="mode-swing"><span class="label">2026</span><span class="val">${sw.r2Dp.toFixed(1)}%</span> Lib</div>
+        <div class="votes" style="text-align:left; margin-top:6px;">${fmt(sw.r2Total)} 2026 votes counted</div>
+      `;
+    }
+    el.appendChild(card);
+  });
+}
+
+// ============================================================
+// Projection: COUNTY-LEVEL early-vote swing applied to that
+// county's election-day baseline.
+//
+// For each county c:
+//   R1 early D% = (R1 mail D + R1 EIP D) / (R1 mail + R1 EIP) total
+//   R2 early D% = (R2 mail D + R2 EIP D) / (R2 mail + R2 EIP) total
+//   County early swing = R2 early D% - R1 early D%
+//   R1 eday D% = R1 election day D / total
+//   Projected eday D% = R1 eday D% + county early swing
+//
+//   Final D = (R2 counted early D + R2 counted eday D) +
+//             (projected remaining eday * proj eday D%)
+//
+// If a county has no R2 early data yet, fall back to district
+// average early swing.
+// ============================================================
+function project() {
+  if (!PARSED.r1 || !PARSED.r2) return;
+
+  // Detect: does the 2025 data include mode breakdowns? Wisconsin reporting
+  // typically does NOT — clerks report everything as one bucket — so we
+  // need a fallback to whole-county uniform swing.
+  const r1ModeTotal = MODE_KEYS.reduce((sum, k) => {
+    const m = PARSED.r1.summary.modes[k];
+    return sum + (m.d || 0) + (m.r || 0);
+  }, 0);
+  const useModeMethod = r1ModeTotal > 0;
+
+  // District-wide mode swings (for the top swing card; will all be null if no modes)
+  const modeSwings = {};
+  MODE_KEYS.forEach(k => {
+    const r1m = PARSED.r1.summary.modes[k];
+    const r2m = PARSED.r2.summary.modes[k];
+    const r1Total = r1m.d + r1m.r;
+    const r2Total = r2m.d + r2m.r;
+    if (r1Total > 0 && r2Total > 0) {
+      const r1Dp = dPctOf(r1m.d, r1m.r);
+      const r2Dp = dPctOf(r2m.d, r2m.r);
+      modeSwings[k] = { r1Dp, r2Dp, swing: r2Dp - r1Dp, r2Total };
+    } else {
+      modeSwings[k] = null;
+    }
+  });
+  renderModeSwings(modeSwings);
+
+  // District-wide swing baseline.
+  // - If modes available: early-vote (mail + EIP) swing
+  // - If not: whole-statewide swing
+  let r1EarlyD, r1EarlyR, r2EarlyD, r2EarlyR;
+  if (useModeMethod) {
+    r1EarlyD = PARSED.r1.summary.modes.absentee_mail.d + PARSED.r1.summary.modes.absentee_in_person.d;
+    r1EarlyR = PARSED.r1.summary.modes.absentee_mail.r + PARSED.r1.summary.modes.absentee_in_person.r;
+    r2EarlyD = PARSED.r2.summary.modes.absentee_mail.d + PARSED.r2.summary.modes.absentee_in_person.d;
+    r2EarlyR = PARSED.r2.summary.modes.absentee_mail.r + PARSED.r2.summary.modes.absentee_in_person.r;
+  } else {
+    // No mode breakdown — use whole statewide totals
+    r1EarlyD = PARSED.r1.summary.d;
+    r1EarlyR = PARSED.r1.summary.r;
+    r2EarlyD = PARSED.r2.summary.d;
+    r2EarlyR = PARSED.r2.summary.r;
+  }
+  const distR1EarlyDp = (r1EarlyD + r1EarlyR) > 0 ? dPctOf(r1EarlyD, r1EarlyR) : 0;
+  const distR2EarlyDp = (r2EarlyD + r2EarlyR) > 0 ? dPctOf(r2EarlyD, r2EarlyR) : null;
+  const distEarlySwing = distR2EarlyDp != null ? distR2EarlyDp - distR1EarlyDp : 0;
+
+  // Show methodology banner
+  const banner = document.getElementById('method-banner');
+  if (banner) {
+    banner.style.display = useModeMethod ? 'none' : 'block';
+  }
+
+  // Index counties by name
+  const r1ByName = {};
+  PARSED.r1.counties.forEach(c => { r1ByName[c.name] = c; });
+  const r2ByName = {};
+  PARSED.r2.counties.forEach(c => { r2ByName[c.name] = c; });
+  const allNames = new Set([...Object.keys(r1ByName), ...Object.keys(r2ByName)]);
+
+  const rows = [];
+  let totalProjD = 0, totalProjR = 0, totalProjVotes = 0;
+  let totalCounted = 0, totalExpected = 0, countiesIn = 0;
+
+  Array.from(allNames).sort().forEach(name => {
+    const c1 = r1ByName[name];
+    const c2 = r2ByName[name];
+    const eevp = c2?.eevp ?? 0;
+    const r2total = (c2?.d || 0) + (c2?.r || 0);
+    const expected = c2?.expected || c1?.total || ((c1?.d || 0) + (c1?.r || 0));
+    if (eevp > 0) countiesIn++;
+    totalCounted += r2total;
+    totalExpected += expected;
+
+    // Whole-county totals (always available from the candidate aggregation)
+    const r1WholeD = c1?.d || 0;
+    const r1WholeR = c1?.r || 0;
+    const r1WholeDp = (r1WholeD + r1WholeR) > 0 ? dPctOf(r1WholeD, r1WholeR) : null;
+    const r2WholeD = c2?.d || 0;
+    const r2WholeR = c2?.r || 0;
+    const r2WholeDp = (r2WholeD + r2WholeR) > 0 ? dPctOf(r2WholeD, r2WholeR) : null;
+
+    // Mode-broken totals (only meaningful if useModeMethod)
+    const r1m = c1?.modes || { absentee_mail: {d:0,r:0}, absentee_in_person: {d:0,r:0}, election_day_in_person: {d:0,r:0} };
+    const r2m = c2?.modes || { absentee_mail: {d:0,r:0}, absentee_in_person: {d:0,r:0}, election_day_in_person: {d:0,r:0} };
+    const r1MailD = r1m.absentee_mail.d, r1MailR = r1m.absentee_mail.r;
+    const r1EipD = r1m.absentee_in_person.d, r1EipR = r1m.absentee_in_person.r;
+    const r1EdayD = r1m.election_day_in_person.d, r1EdayR = r1m.election_day_in_person.r;
+    const r2MailD = r2m.absentee_mail.d, r2MailR = r2m.absentee_mail.r;
+    const r2EipD = r2m.absentee_in_person.d, r2EipR = r2m.absentee_in_person.r;
+    const r2EdayD = r2m.election_day_in_person.d, r2EdayR = r2m.election_day_in_person.r;
+
+    // Per-county "early" view — either real early modes OR whole county as a single bucket
+    let r1EarlyDc, r1EarlyRc, r2EarlyDc, r2EarlyRc;
+    if (useModeMethod) {
+      r1EarlyDc = r1MailD + r1EipD;
+      r1EarlyRc = r1MailR + r1EipR;
+      r2EarlyDc = r2MailD + r2EipD;
+      r2EarlyRc = r2MailR + r2EipR;
+    } else {
+      r1EarlyDc = r1WholeD;
+      r1EarlyRc = r1WholeR;
+      r2EarlyDc = r2WholeD;
+      r2EarlyRc = r2WholeR;
+    }
+    const r1EarlyDp = (r1EarlyDc + r1EarlyRc) > 0 ? dPctOf(r1EarlyDc, r1EarlyRc) : null;
+    const r2EarlyDp = (r2EarlyDc + r2EarlyRc) > 0 ? dPctOf(r2EarlyDc, r2EarlyRc) : null;
+    const r1EdayDp = (r1EdayD + r1EdayR) > 0 ? dPctOf(r1EdayD, r1EdayR) : null;
+
+    // County swing — observed if county has R2 data, else fall back to district swing
+    let countyEarlySwing;
+    if (r2EarlyDp != null && r1EarlyDp != null) {
+      countyEarlySwing = r2EarlyDp - r1EarlyDp;
+    } else {
+      countyEarlySwing = distEarlySwing;
+    }
+
+    // Projection logic branches on method
+    let projDp;          // projected D% for the remaining vote
+    let projRemD, projRemR, finalD, finalR;
+
+    if (useModeMethod && r1EdayDp != null) {
+      // Early-swing-to-eday method
+      projDp = Math.max(0, Math.min(100, r1EdayDp + countyEarlySwing));
+      const r1TotalC = r1WholeD + r1WholeR;
+      const r1EdayTotc = r1EdayD + r1EdayR;
+      const edayShare = r1TotalC > 0 ? r1EdayTotc / r1TotalC : 0.5;
+      const expectedEdayC = expected * edayShare;
+      const r2EdayTotc = r2EdayD + r2EdayR;
+      const remainingEday = Math.max(0, expectedEdayC - r2EdayTotc);
+      projRemD = remainingEday * (projDp / 100);
+      projRemR = remainingEday * (1 - projDp / 100);
+      finalD = (c2?.d || 0) + projRemD;
+      finalR = (c2?.r || 0) + projRemR;
+    } else {
+      // Whole-county uniform swing fallback (used when modes are missing)
+      // Project ALL remaining vote at the swing-adjusted rate
+      const baseDp = r1WholeDp != null ? r1WholeDp : 0;
+      projDp = Math.max(0, Math.min(100, baseDp + countyEarlySwing));
+      const remaining = Math.max(0, expected - r2total);
+      projRemD = remaining * (projDp / 100);
+      projRemR = remaining * (1 - projDp / 100);
+      finalD = (c2?.d || 0) + projRemD;
+      finalR = (c2?.r || 0) + projRemR;
+    }
+
+    totalProjD += finalD;
+    totalProjR += finalR;
+    totalProjVotes += expected;
+
+    rows.push({
+      name,
+      r1EarlyDc, r1EarlyRc, r1EarlyDp,
+      r2EarlyDc, r2EarlyRc, r2EarlyDp,
+      countyEarlySwing,
+      r1EdayD, r1EdayR, r1EdayDp,
+      r2EdayD, r2EdayR,
+      projEdayDp: projDp, projEdayRemD: projRemD, projEdayRemR: projRemR,
+      eevp, finalD, finalR, r2total, expected,
+      useModeMethod
+    });
+  });
+
+  // Render county table
+  const tbody = document.getElementById('county-tbody');
+  const newTotals = {};
+  rows.forEach(row => { newTotals[row.name] = row.r2total; });
+
+  tbody.innerHTML = '';
+  rows.forEach(row => {
+    const tr = document.createElement('tr');
+    const swingStr = row.countyEarlySwing != null
+      ? `<span class="pill ${row.countyEarlySwing >= 0 ? 'd' : 'r'}">${row.countyEarlySwing >= 0 ? 'L+' : 'C+'}${Math.abs(row.countyEarlySwing).toFixed(1)}</span>`
+      : '<span class="pill gray">—</span>';
+    const eevpClass = row.eevp >= 80 ? 'green' : row.eevp >= 20 ? 'amber' : 'gray';
+    const margin = row.finalD - row.finalR;
+    const marginPct = (row.finalD + row.finalR) > 0 ? Math.abs(100 * margin / (row.finalD + row.finalR)) : 0;
+    const winner = margin > 0 ? 'L' : 'C';
+    const marginStr = `<span style="color:${winner === 'L' ? 'var(--dem)' : 'var(--gop)'}; font-weight:600">${winner}+${marginPct.toFixed(1)}</span>`;
+
+    // Helper: render a two-line cell with Lib/Con numbers and a percentage
+    const dualCell = (d, r, dp) => {
+      if (d == null || r == null || (d + r) === 0) return '<td class="dual">—</td>';
+      return `<td class="dual">
+        <div class="nums"><span class="d">${fmt(d)}</span> / <span class="r">${fmt(r)}</span></div>
+        <div class="pp">L ${dp != null ? dp.toFixed(1) + '%' : '—'}</div>
+      </td>`;
+    };
+    // Helper: projected eday cell
+    const projEdayCell = () => {
+      if (row.projEdayDp == null) return '<td class="dual">—</td>';
+      return `<td class="dual">
+        <div class="nums"><span class="d">${fmt(row.projEdayRemD)}</span> / <span class="r">${fmt(row.projEdayRemR)}</span></div>
+        <div class="pp" style="font-weight:600; color:var(--text)">L ${row.projEdayDp.toFixed(1)}%</div>
+      </td>`;
+    };
+
+    tr.innerHTML = `
+      <td>${row.name}</td>
+      ${dualCell(row.r1EarlyDc, row.r1EarlyRc, row.r1EarlyDp)}
+      ${dualCell(row.r2EarlyDc, row.r2EarlyRc, row.r2EarlyDp)}
+      <td>${swingStr}</td>
+      ${dualCell(row.r1EdayD, row.r1EdayR, row.r1EdayDp)}
+      ${projEdayCell()}
+      <td><span class="pill ${eevpClass}">${row.eevp.toFixed(0)}%</span></td>
+      <td style="color:var(--dem); font-weight:600">${fmt(row.finalD)}</td>
+      <td style="color:var(--gop); font-weight:600">${fmt(row.finalR)}</td>
+      <td>${marginStr}</td>
+    `;
+    if (prevCountyTotals[row.name] != null && prevCountyTotals[row.name] !== row.r2total) {
+      tr.classList.add('flash');
+      setTimeout(() => tr.classList.remove('flash'), 2000);
+    }
+    tbody.appendChild(tr);
+  });
+  prevCountyTotals = newTotals;
+
+  const r1EdayDistD = PARSED.r1.summary.modes.election_day_in_person.d;
+  const r1EdayDistR = PARSED.r1.summary.modes.election_day_in_person.r;
+  const r1EdayDistDp = (r1EdayDistD + r1EdayDistR) > 0 ? dPctOf(r1EdayDistD, r1EdayDistR) : null;
+  const distSwingLabel = useModeMethod ? 'Early' : 'Total';
+
+  document.getElementById('county-tfoot').innerHTML = `
+    <tr>
+      <td>Statewide</td>
+      <td class="dual">
+        <div class="nums"><span class="d">${fmt(r1EarlyD)}</span> / <span class="r">${fmt(r1EarlyR)}</span></div>
+        <div class="pp">L ${distR1EarlyDp.toFixed(1)}%</div>
+      </td>
+      <td class="dual">
+        ${(r2EarlyD + r2EarlyR) > 0 ? `
+          <div class="nums"><span class="d">${fmt(r2EarlyD)}</span> / <span class="r">${fmt(r2EarlyR)}</span></div>
+          <div class="pp">L ${distR2EarlyDp.toFixed(1)}%</div>
+        ` : '—'}
+      </td>
+      <td><span class="pill ${distEarlySwing >= 0 ? 'd' : 'r'}">${distEarlySwing >= 0 ? 'L+' : 'C+'}${Math.abs(distEarlySwing).toFixed(1)}</span></td>
+      <td class="dual">
+        ${r1EdayDistDp != null ? `
+          <div class="nums"><span class="d">${fmt(r1EdayDistD)}</span> / <span class="r">${fmt(r1EdayDistR)}</span></div>
+          <div class="pp">L ${r1EdayDistDp.toFixed(1)}%</div>
+        ` : '—'}
+      </td>
+      <td>—</td>
+      <td>${PARSED.r2.eevp.toFixed(0)}%</td>
+      <td style="color:var(--dem)">${fmt(totalProjD)}</td>
+      <td style="color:var(--gop)">${fmt(totalProjR)}</td>
+      <td></td>
+    </tr>
+  `;
+
+  // Top projection card
+  const totalProj = totalProjD + totalProjR;
+  const dP = totalProj > 0 ? 100 * totalProjD / totalProj : 0;
+  const rP = 100 - dP;
+  document.getElementById('proj-d-pct').textContent = pct(dP);
+  document.getElementById('proj-r-pct').textContent = pct(rP);
+  document.getElementById('proj-d-votes').textContent = fmt(totalProjD);
+  document.getElementById('proj-r-votes').textContent = fmt(totalProjR);
+  document.getElementById('proj-d-bar').style.width = dP + '%';
+  document.getElementById('proj-r-bar').style.width = rP + '%';
+
+  const winner = dP > rP ? 'L' : 'C';
+  const margin = Math.abs(dP - rP);
+  const margEl = document.getElementById('proj-margin');
+  margEl.textContent = `${winner}+${margin.toFixed(1)}`;
+  margEl.style.color = winner === 'L' ? 'var(--dem)' : 'var(--gop)';
+
+  const r1Dist = dPctOf(PARSED.r1.summary.d, PARSED.r1.summary.r);
+  const finalSwing = dP - r1Dist;
+  const swEl = document.getElementById('proj-swing');
+  swEl.textContent = (finalSwing >= 0 ? 'L+' : 'C+') + Math.abs(finalSwing).toFixed(1);
+  swEl.style.color = finalSwing >= 0 ? 'var(--dem)' : 'var(--gop)';
+
+  document.getElementById('reporting-pct').textContent = PARSED.r2.eevp.toFixed(1) + '%';
+  document.getElementById('reporting-counted').textContent = fmt(totalCounted);
+  document.getElementById('reporting-expected').textContent = fmt(totalExpected);
+  document.getElementById('counties-in').textContent = countiesIn;
+  document.getElementById('proj-turnout').textContent = fmt(totalProjVotes);
+  const r1TotalVotes = PARSED.r1.summary.d + PARSED.r1.summary.r + PARSED.r1.summary.o;
+  document.getElementById('proj-turnout-note').textContent =
+    `${(100 * totalProjVotes / r1TotalVotes).toFixed(0)}% of 2025 turnout`;
+
+  // Save snapshot to history and re-render the chart
+  saveSnapshot(dP, rP, PARSED.r2.eevp, totalProjD, totalProjR, totalProjVotes);
+  renderHistoryChart();
+}
+
+function render() {
+  renderR1Summary();
+  renderR2Summary();
+  // Debug strip
+  const src = PARSED.r2 || PARSED.r1;
+  if (src) {
+    const pills = src.summary.candidates
+      .sort((a,b) => b.votes - a.votes)
+      .map(c => {
+        const cls = c.party === 'D' ? 'd' : c.party === 'R' ? 'r' : 'gray';
+        return `<span class="pill ${cls}">${c.lastName} ${c.party}</span>`;
+      }).join(' ');
+    document.getElementById('cand-debug').innerHTML = pills;
+  }
+  if (PARSED.r1 && PARSED.r2) project();
+}
+
+// ============================================================
+// Auto-refresh + countdown
+// ============================================================
+function startAutoRefresh() {
+  setInterval(fetchAll, REFRESH_SECS * 1000);
+  countdownInterval = setInterval(() => {
+    if (nextRefreshAt) {
+      const remain = Math.max(0, Math.ceil((nextRefreshAt - Date.now()) / 1000));
+      document.getElementById('countdown').textContent = remain;
+    }
+  }, 1000);
+}
+
+window.addEventListener('load', () => {
+  renderHistoryChart();
+  fetchAll();
+  startAutoRefresh();
+});
+</script>
+</body>
+</html>
